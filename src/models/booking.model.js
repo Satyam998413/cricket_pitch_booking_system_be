@@ -1,27 +1,34 @@
 import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema({
-  user_id: {
+
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   },
-  pitch_id: {
+
+  pitchId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Pitch"
   },
-  slot_time: String,
-  booking_date: String,
+
+  date: String,
+
+  slot: String,
+
   status: {
     type: String,
     default: "confirmed"
+  },
+  totalPrice:{
+    type:Number,default:0
   }
-},{timestamps:true});
+
+}, { timestamps: true });
 
 bookingSchema.index(
-  { pitch_id: 1, slot_time: 1, booking_date: 1 },
+  { pitchId: 1, date: 1, slot: 1 },
   { unique: true }
 );
 
-const Booking = mongoose.model("Booking", bookingSchema);
-
-export default Booking;
+export default mongoose.model("Booking", bookingSchema);

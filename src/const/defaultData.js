@@ -1,5 +1,5 @@
 export const defaultAdmin={
-      name: "System Admin",
+      username: "System Admin",
       email: "admin@cricket.com",
       password: "Admin@123",
       role: "admin"

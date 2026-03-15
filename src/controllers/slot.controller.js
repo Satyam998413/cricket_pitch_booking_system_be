@@ -3,17 +3,19 @@ import generateSlots from "../utils/generateSlots.js"
 import redis from "../config/redis.js"
 
 export const getSlots = async (req, res) => {
+  const { pitchId, date } = req.query;
 
-  const { pitchId, date } = req.query
+  console.log('------------',{ pitchId, date })
 
   const slots = generateSlots()
 
   const bookings = await Booking.find({
-    pitch_id: pitchId,
-    booking_date: date
+    pitchId: pitchId,
+    date: date
   })
 
-  const bookedSlots = bookings.map(b => b.slot_time)
+  
+  const bookedSlots = bookings.map(b => b.slot)
 
   const result = []
 
@@ -47,7 +49,6 @@ export const getSlots = async (req, res) => {
     }
 
   }
-
   res.json(result)
 
 }

@@ -1,6 +1,9 @@
 import Booking from "../models/booking.model.js"
 import redisClient from "../config/redis.js"
-import { getIO } from "../config/socket.js"
+import { getIO } from "../config/socket.js";
+import redlock from "../config/redlock,js";
+import Pitch from "../models/pitch.model.js";
+
 
 export const reserveSlot = async (req, res) => {
 
@@ -29,69 +32,111 @@ export const reserveSlot = async (req, res) => {
 
 export const confirmBooking = async (req, res) => {
 
-  const { pitchId, date, slot } = req.body
-
-  const key = `slot:${pitchId}:${date}:${slot}`
-
-  const reservedUser = await redis.get(key)
-
-  if (!reservedUser) {
-    return res.status(400).json({
-      message: "Reservation expired"
-    })
-  }
-
-  if (reservedUser !== req.user.id) {
-    return res.status(403).json({
-      message: "This slot is reserved by another user"
-    })
-  }
+  const { pitchId, date, slot } = req.body;
+  const userId = req.user._id.toString();
 
   try {
 
+    const redisKey = `slot:${pitchId}:${date}:${slot}`;
+
+    const reservedUser = await redisClient.get(redisKey);
+
+    if (!reservedUser || reservedUser !== userId) {
+      return res.status(400).json({
+        message: "Reservation expired"
+      });
+    }
+
+    const pitch=await Pitch.findOne({_id:pitchId})
+
     const booking = await Booking.create({
-      user_id: req.user.id,
-      pitch_id: pitchId,
-      slot_time: slot,
-      booking_date: date
-    })
-
-
-    const reservedUser = await redisClient.get(key);
-
-if (!reservedUser) {
-  return res.status(400).json({
-    message: "Reservation expired"
-  });
-}
-    await redisClient.del(key)
-
-    const io = getIO()
-
-    io.emit("slotBooked", {
+      userId,
       pitchId,
       date,
-      slot
-    })
+      slot,
+      totalPrice:pitch.price_per_hour
+    });
 
-    res.json(booking)
+    await redisClient.del(redisKey);
+
+    return res.json({
+      success: true,
+      booking
+    });
 
   } catch (error) {
 
-    res.status(400).json({
-      message: "Slot already booked"
-    })
+    // Mongo duplicate key error
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Slot already booked"
+      });
+    }
+
+    return res.status(500).json({
+      message: error.message
+    });
 
   }
 
-}
-
+};
 
 export const myBookings = async (req, res) => {
 
-  const bookings = await Booking.find({
-    user_id: req.user.id
-  });
+
+  const bookings = await Booking.aggregate([
+  {
+    '$match': {
+     ...req?.user?.role!=='admin'&& {userId:req.user._id},
+     status: "confirmed"
+    }
+  }, {
+    '$lookup': {
+      'from': 'pitches', 
+      'localField': 'pitchId', 
+      'foreignField': '_id', 
+      'as': 'pitch'
+    }
+  }, {
+    '$lookup': {
+      'from': 'users', 
+      'localField': 'userId', 
+      'foreignField': '_id', 
+      'as': 'user'
+    }
+  }, {
+    '$addFields': {
+      'pitch': {
+        '$arrayElemAt': [
+          '$pitch', 0
+        ]
+      },
+       'user': {
+        '$arrayElemAt': [
+          '$user', 0
+        ]
+      },
+    }
+  }, {
+    '$project': {
+      '_id': 1, 
+      'slot': 1, 
+      'createdAt': 1, 
+      'status': 1, 
+      'date': 1, 
+      'pitchName': '$pitch.name', 
+      'location': '$pitch.location',
+      'username':'$user.username',
+      createdAt:1,
+      booking_date:'$date',
+      totalPrice:1,
+    }
+  }, {
+    '$addFields': {
+      'createdAt': -1
+    }
+  }
+]);
 
   res.json(bookings);
 };

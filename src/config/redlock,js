@@ -1,0 +1,14 @@
+import Redlock from "redlock";
+import redisClient from "./redis.js";
+
+export const redlock = new Redlock(
+  [redisClient], // must be array
+  {
+    driftFactor: 0.01,
+    retryCount: 5,
+    retryDelay: 200,
+    retryJitter: 200
+  }
+);
+
+export default redlock;

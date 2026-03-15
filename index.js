@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import http from "http";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -10,10 +11,19 @@ import bookingRoutes from "./src/routes/booking.routes.js";
 import seedDatabase from "./src/seed/seed.js";
 import { connectRedis } from "./src/config/redis.js";
 import { connectDB } from "./src/config/db..js";
+import { initSocket } from "./src/config/socket.js";
+
 
 dotenv.config();
 
 const app = express();
+// Body parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const server = http.createServer(app);
+
+initSocket(server);
 
 // Fix for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -31,9 +41,9 @@ app.get("/api/about", (req, res) => {
   res.send({ data: `About route 2 ${process.env.MONGO_URI1}` });
 });
 
-app.use("/api/image", authRoutes);
-app.use("/api/video", pitchRoutes);
-app.use("/api/conversations", bookingRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/pitch", pitchRoutes);
+app.use("/api/booking", bookingRoutes);
 
 const PORT = process.env.PORT || 8000;
 

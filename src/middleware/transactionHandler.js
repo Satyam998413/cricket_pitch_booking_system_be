@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-import { isReplicaDB } from "../../config/config.js";
+import config from "../config/env.js";
+
 
 // isAbort or isCommit passed also session compulsory
 const handleTransaction = async (data) => {
   let { session, isStart, isCommit, isAbort } = data;
-  if (isReplicaDB) {
+  if (config.isReplicaDB) {
     console.log("handleTransaction",{isStart, isCommit, isAbort });
     
     if (isStart) {

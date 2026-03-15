@@ -12,6 +12,7 @@ import seedDatabase from "./src/seed/seed.js";
 import { connectRedis } from "./src/config/redis.js";
 import { connectDB } from "./src/config/db..js";
 import { initSocket } from "./src/config/socket.js";
+import config from "./src/config/env.js";
 
 
 dotenv.config();
@@ -37,15 +38,12 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "./public/index.html"));
 });
 
-app.get("/api/about", (req, res) => {
-  res.send({ data: `About route 2 ${process.env.MONGO_URI1}` });
-});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pitch", pitchRoutes);
 app.use("/api/booking", bookingRoutes);
 
-const PORT = process.env.PORT || 8000;
+const PORT = config.PORT || 8000;
 
 // Connect DB & Start Server
 const startServer = async () => {

@@ -3,6 +3,7 @@ import redisClient from "../config/redis.js"
 import { getIO } from "../config/socket.js";
 import redlock from "../config/redlock,js";
 import Pitch from "../models/pitch.model.js";
+import { handleTransaction } from "../middleware/transactionHandler.js";
 
 
 export const reserveSlot = async (req, res) => {
@@ -35,6 +36,8 @@ export const confirmBooking = async (req, res) => {
   const { pitchId, date, slot } = req.body;
   const userId = req.user._id.toString();
 
+  let session;
+
   try {
 
     const redisKey = `slot:${pitchId}:${date}:${slot}`;
@@ -47,24 +50,40 @@ export const confirmBooking = async (req, res) => {
       });
     }
 
-    const pitch=await Pitch.findOne({_id:pitchId})
+    // START TRANSACTION
+    session = await handleTransaction({ isStart: true });
 
-    const booking = await Booking.create({
+    const pitch = await Pitch.findOne({ _id: pitchId }).session(session);
+
+    if (!pitch) {
+      await handleTransaction({ session, isAbort: true });
+      return res.status(404).json({ message: "Pitch not found" });
+    }
+
+    const booking = await Booking.create([{
       userId,
       pitchId,
       date,
       slot,
-      totalPrice:pitch.price_per_hour
-    });
+      totalPrice: pitch.price_per_hour
+    }], { session });
 
+    // COMMIT TRANSACTION
+    await handleTransaction({ session, isCommit: true });
+
+    // Remove reservation after success
     await redisClient.del(redisKey);
 
     return res.json({
       success: true,
-      booking
+      booking: booking[0]
     });
 
   } catch (error) {
+
+    if (session) {
+      await handleTransaction({ session, isAbort: true });
+    }
 
     // Mongo duplicate key error
     if (error.code === 11000) {
@@ -78,8 +97,8 @@ export const confirmBooking = async (req, res) => {
     });
 
   }
-
 };
+
 
 export const myBookings = async (req, res) => {
 

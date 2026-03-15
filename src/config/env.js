@@ -17,13 +17,15 @@ const config = {
     process.env.MONGO_URI ||
     "mongodb://localhost:27017/cricket_booking",
 
+    isReplicaDB:  process.env.IS_REPLICA_DB ||false,
+
   REDIS_HOST: process.env.REDIS_HOST || "127.0.0.1",
   REDIS_PORT: process.env.REDIS_PORT || 6379,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || "",
 
   JWT_SECRET: process.env.JWT_SECRET || "defaultSecret",
 
-  SLOT_RESERVE_TIME: process.env.SLOT_RESERVE_TIME || 120
+  SLOT_RESERVE_TIME: process.env.SLOT_RESERVE_TIME || 120,
 };
 
 export default config;

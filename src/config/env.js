@@ -17,7 +17,7 @@ const config = {
     process.env.MONGO_URI ||
     "mongodb://localhost:27017/cricket_booking",
 
-    isReplicaDB:  process.env.IS_REPLICA_DB ||false,
+    isReplicaDB:  process.env.IS_REPLICA_DB==='true'?true:false,
 
   REDIS_HOST: process.env.REDIS_HOST || "127.0.0.1",
   REDIS_PORT: process.env.REDIS_PORT || 6379,

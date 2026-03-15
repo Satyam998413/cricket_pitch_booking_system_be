@@ -6,7 +6,7 @@ import config from "../config/env.js";
 const handleTransaction = async (data) => {
   let { session, isStart, isCommit, isAbort } = data;
   if (config.isReplicaDB) {
-    console.log("handleTransaction",{isStart, isCommit, isAbort });
+
     
     if (isStart) {
       session = await mongoose.startSession();

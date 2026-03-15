@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Backend Running Check</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: #020617;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    .ok {
+      color: #22c55e;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚀 Backend is Running</h1>
+    <p class="ok">Status: OK</p>
+    <p id="uptime">Loading uptime...</p>
+  </div>
+
+  <script>
+    fetch("/health")
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("uptime").innerText =
+          `Uptime: ${Math.floor(data.uptime)} seconds`;
+      });
+  </script>
+</body>
+</html>

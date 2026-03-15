@@ -2,7 +2,8 @@ import express from "express";
 import {
   reserveSlot,
   confirmBooking,
-  myBookings
+  myBookings,
+  deleteBooking
 } from "../controllers/booking.controller.js";
 
 
@@ -20,5 +21,6 @@ router.post("/reserve-slot", auth, reserveSlot);
 router.post("/confirm-booking", auth, confirmBooking);
 
 router.get("/my-bookings", auth, myBookings);
+router.delete("/:bookingId", auth, deleteBooking);
 
 export default router;

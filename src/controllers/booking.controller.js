@@ -31,6 +31,21 @@ export const reserveSlot = async (req, res) => {
 };
 
 
+
+// Delete Booking
+export const deleteBooking = async (req, res) => {
+  try {
+
+    const { bookingId } = req.params;
+
+    await Booking.deleteOne({ _id: bookingId });
+    res.json(null);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 export const confirmBooking = async (req, res) => {
 
   const { pitchId, date, slot } = req.body;
